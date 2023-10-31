@@ -408,7 +408,7 @@ def Shor(N: int) -> int:
 # In[68]:
 
 
-Shor(15) # Seems to work. Unsure of Fourier transform indexing
+# Shor(15) # Seems to work. Unsure of Fourier transform indexing
 
 
 # In[114]:
@@ -486,5 +486,5 @@ def Shor2(N: int) -> int:
 # In[119]:
 
 
-Shor2(15) # Seems to work faster. Also ports to QASM just fine. 
+# Shor2(15) # Seems to work faster. Also ports to QASM just fine. 
 
