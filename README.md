@@ -1,4 +1,6 @@
 # Quantum-algorithms
+All works joint with J. Gardiner and J. Kazdan. 
+
 These are some simple implementations of four elementary quantum algorithms -- Deutsch-Jozsa, Bernstein-Vazirani, Grover's, and Simon's -- 
 written in Python using Google's Cirq library for the purposes of CS 238 in the Winter quarter of 2021 at UCLA. 
 
