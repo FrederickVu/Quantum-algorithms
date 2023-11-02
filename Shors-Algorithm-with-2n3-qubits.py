@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[20]:
-
-
 import cirq
 import numpy as np
 import sympy
@@ -13,18 +7,11 @@ from typing import Callable, Optional, Sequence, Union, List
 import time
 from cirq import ops
 
-
-# In[2]:
-
-
 def toffoli(ctrl1, ctrl2, target) -> List[cirq.Operation]:
     # Makes a Toffoli gate using one of the standard decompositions that uses controlled-R_x gates (up to global phase). 
     
     return [(cirq.CX**(0.5))(ctrl2, target),cirq.CX(ctrl1, ctrl2),(cirq.CX**(-0.5))(ctrl2, target),
         cirq.CX(ctrl1, ctrl2), (cirq.CX**(0.5))(ctrl1, target)]
-
-
-# In[3]:
 
 
 def phaseAdder(a: int, n: int, qubits: List[cirq.Qid], ctrl1 = None, ctrl2 = None) -> List[cirq.Operation]:
@@ -68,9 +55,6 @@ def phaseSubtractor(a, n, qubits, ctrl1 = None, ctrl2 = None) -> List[cirq.Opera
     return list(map(cirq.inverse, temp))
 
 
-# In[4]:
-
-
 def modPhaseAdder(a, N, n, qubits: List[cirq.Qid], ancilla: cirq.Qid, ctrl1 = None, ctrl2 = None, p = None) -> List[cirq.Operation]:
     # We add classical int a to quantum int b mod N, assuming a, b, and N are less than 2**n. This is done 
     # in the Fourier basis, just as in phaseAdder(). 
@@ -97,10 +81,6 @@ def modPhaseAdder(a, N, n, qubits: List[cirq.Qid], ancilla: cirq.Qid, ctrl1 = No
     
     return gates 
 
-
-# In[5]:
-
-
 def modMultiplier(a, N, n, qubits1: List[cirq.Qid], qubits2: List[cirq.Qid], ancilla, ctrl) -> List[cirq.Operation]:
     # Defines a controlled multiplier mod N gate which maps integers x, b mod N to b + a*x mod N. 
     # The integers a, b, x, and N are all assumed to be less than 2**n. x is stored in qubits1 of length n, 
@@ -117,10 +97,6 @@ def modMultiplier(a, N, n, qubits1: List[cirq.Qid], qubits2: List[cirq.Qid], anc
     gates.append(cirq.qft(*qubits2, without_reverse = True)**-1)
     
     return gates
-
-
-# In[6]:
-
 
 def controlledUa(a, N, n, qubits1, qubits2, ancilla, ctrl) -> List[cirq.Operation]:
     # Multiplies the int stored in qubits1 by 'a' mod N if ctrl is on by using ancilla register qubits2 of length n+1. 
@@ -147,112 +123,81 @@ def controlledUa(a, N, n, qubits1, qubits2, ancilla, ctrl) -> List[cirq.Operatio
 
 
 # Test cell: Semiclassical inverse QFT + phase estimation, ad hoc implementation of Shor's. 
-a, N, n = 7, 15, 4
+# a, N, n = 7, 15, 4
 
-ctrl = cirq.NamedQubit('ctrl')
-reg1 = cirq.LineQubit.range(n)
-reg2 = cirq.LineQubit.range(n,2*n+1)
-ancilla = cirq.NamedQubit('ancilla')
-measurements = '' # Will be a bit string. Used to determine rotation and presence of X gate. 
-state = (1<<(n+2)) # Initial state of the combined ctrl + registers + ancilla. Want 1 in reg1, 0 elsewhere. 
+# ctrl = cirq.NamedQubit('ctrl')
+# reg1 = cirq.LineQubit.range(n)
+# reg2 = cirq.LineQubit.range(n,2*n+1)
+# ancilla = cirq.NamedQubit('ancilla')
+# measurements = '' # Will be a bit string. Used to determine rotation and presence of X gate. 
+# state = (1<<(n+2)) # Initial state of the combined ctrl + registers + ancilla. Want 1 in reg1, 0 elsewhere. 
 
-for i in range(2*n):
-    circuit = cirq.Circuit()
-    # Need to zero the ctrl if last measured 1. 
-    if (not len(measurements) == 0) and measurements[0] == '1':
-        circuit.append(cirq.X(ctrl))
-    circuit.append(cirq.H(ctrl))
-    circuit.append(controlledUa(pow(a,2**(2*n-i-1), N), N, n, reg1, reg2, ancilla, ctrl))
-    # Determine inverse QFT component based off measurements. 
-    # Want to apply [1 0, 0 e**(-2*pi*i*(0.m_{i-1}...m_0))]
-    if i == 0:
-        phase = 0
-    else:
-        phase = (int(measurements, 2)/(2**i))%1
-    circuit.append((cirq.Z**(-2*phase))(ctrl))
-    circuit.append(cirq.H(ctrl))
-    circuit.append(cirq.measure(ctrl, key = f'bit{i}'))
-    # simulate() produces measurements as well as final state vector after measurement. 
-    # We take the measurement to determine next circuit, and we take the final state vector to
-    # feed it into next circuit. 
-    sim = cirq.Simulator()
-    result = sim.simulate(program = circuit, qubit_order = [ctrl, *reg1, *reg2, ancilla], initial_state = state)
-    measurements = str(result.measurements[f"bit{i}"][0]) + measurements
-    state = result.state_vector()
-    print(result.measurements[f"bit{i}"])
-print(measurements)
-    
-
-
-# In[43]:
-
-
-# Junk cell to test out classical controls
-
-a, N, n = 7, 15, 4
-ctrl = cirq.NamedQubit('ctrl')
-reg1 = cirq.LineQubit.range(n)
-reg2 = cirq.LineQubit.range(n,2*n+1)
-ancilla = cirq.NamedQubit('ancilla')
-string = ''
-print(cirq.__version__)
-circuit = cirq.Circuit()
-circuit.append(cirq.measure(ctrl, key = 'a'))
-circuit.append(cirq.ClassicallyControlledOperation(cirq.X(ctrl), ['a']))
-circuit.append(cirq.X(ctrl).with_classical_controls(''))
-print(circuit)
-print(circuit.all_qubits())
-# sim = cirq.Simulator()
-# print(sim.simulate(circuit).state_vector())
-print(-1**3)
-print((7**)
-
-
-# In[112]:
+# for i in range(2*n):
+#     circuit = cirq.Circuit()
+#     # Need to zero the ctrl if last measured 1. 
+#     if (not len(measurements) == 0) and measurements[0] == '1':
+#         circuit.append(cirq.X(ctrl))
+#     circuit.append(cirq.H(ctrl))
+#     circuit.append(controlledUa(pow(a,2**(2*n-i-1), N), N, n, reg1, reg2, ancilla, ctrl))
+#     # Determine inverse QFT component based off measurements. 
+#     # Want to apply [1 0, 0 e**(-2*pi*i*(0.m_{i-1}...m_0))]
+#     if i == 0:
+#         phase = 0
+#     else:
+#         phase = (int(measurements, 2)/(2**i))%1
+#     circuit.append((cirq.Z**(-2*phase))(ctrl))
+#     circuit.append(cirq.H(ctrl))
+#     circuit.append(cirq.measure(ctrl, key = f'bit{i}'))
+#     # simulate() produces measurements as well as final state vector after measurement. 
+#     # We take the measurement to determine next circuit, and we take the final state vector to
+#     # feed it into next circuit. 
+#     sim = cirq.Simulator()
+#     result = sim.simulate(program = circuit, qubit_order = [ctrl, *reg1, *reg2, ancilla], initial_state = state)
+#     measurements = str(result.measurements[f"bit{i}"][0]) + measurements
+#     state = result.state_vector()
+#     print(result.measurements[f"bit{i}"])
+# print(measurements)
 
 
 # Test cell: Classically controlled version of Shor using pre-release Cirq v0.14. 
-a, N, n = 7, 15, 4
+# a, N, n = 7, 15, 4
 
-ctrl = cirq.NamedQubit('ctrl')
-reg1 = cirq.LineQubit.range(n)
-reg2 = cirq.LineQubit.range(n,2*n+1)
-ancilla = cirq.NamedQubit('ancilla')
+# ctrl = cirq.NamedQubit('ctrl')
+# reg1 = cirq.LineQubit.range(n)
+# reg2 = cirq.LineQubit.range(n,2*n+1)
+# ancilla = cirq.NamedQubit('ancilla')
 
-circuit = cirq.Circuit()
-# Initialize state of reg1 to |1>.
-circuit.append(cirq.X(reg1[n-1]))
-# Start with gates before first measurement.
-circuit.append(cirq.H(ctrl))
-circuit.append(controlledUa(pow(a, 2**(2*n-1), N), N, n, reg1, reg2, ancilla, ctrl))
-circuit.append(cirq.H(ctrl))
-circuit.append(cirq.measure(ctrl, key = 'bit0'))
+# circuit = cirq.Circuit()
+# # Initialize state of reg1 to |1>.
+# circuit.append(cirq.X(reg1[n-1]))
+# # Start with gates before first measurement.
+# circuit.append(cirq.H(ctrl))
+# circuit.append(controlledUa(pow(a, 2**(2*n-1), N), N, n, reg1, reg2, ancilla, ctrl))
+# circuit.append(cirq.H(ctrl))
+# circuit.append(cirq.measure(ctrl, key = 'bit0'))
 
-# Apply the rest of the gates. 
-for i in range(1,2*n):
-    circuit.append(cirq.X(ctrl).with_classical_controls(f'bit{i-1}'))
-    circuit.append(cirq.H(ctrl))
-    circuit.append(controlledUa(pow(a, 2**(2*n-i-1), N), N, n, reg1, reg2, ancilla, ctrl))
-    for j in range(i): 
-        # Apply phase gate conditioned upon past measurements. 
-        # Want to apply [1 0, 0 e**(-2*pi*i*(0.m_{i-1}...m_0))]
-        circuit.append((cirq.Z**(-(2**(i-j))))(ctrl).with_classical_controls(f'bit{j}'))
-    circuit.append(cirq.H(ctrl))
-    circuit.append(cirq.measure(ctrl, key = f'bit{i}'))
+# # Apply the rest of the gates. 
+# for i in range(1,2*n):
+#     circuit.append(cirq.X(ctrl).with_classical_controls(f'bit{i-1}'))
+#     circuit.append(cirq.H(ctrl))
+#     circuit.append(controlledUa(pow(a, 2**(2*n-i-1), N), N, n, reg1, reg2, ancilla, ctrl))
+#     for j in range(i): 
+#         # Apply phase gate conditioned upon past measurements. 
+#         # Want to apply [1 0, 0 e**(-2*pi*i*(0.m_{i-1}...m_0))]
+#         circuit.append((cirq.Z**(-(2**(i-j))))(ctrl).with_classical_controls(f'bit{j}'))
+#     circuit.append(cirq.H(ctrl))
+#     circuit.append(cirq.measure(ctrl, key = f'bit{i}'))
 
-sim = cirq.Simulator()
-res = sim.simulate(circuit)
-phase = 0
-for i in range(2*n):
-    phase += int(res.measurements[f'bit{i}'][0])/(2**(2*n-i))
-print(phase)
-
-
-# In[113]:
+# sim = cirq.Simulator()
+# res = sim.simulate(circuit)
+# phase = 0
+# for i in range(2*n):
+#     phase += int(res.measurements[f'bit{i}'][0])/(2**(2*n-i))
+# print(phase)
 
 
-for i in range(2*n):
-    print(int(res.measurements[f'bit{i}']))
+# for i in range(2*n):
+#     print(int(res.measurements[f'bit{i}']))
     
 # tq = cirq.NamedQubit('test')
 # tc = cirq.Circuit(cirq.H(tq))
@@ -265,50 +210,47 @@ for i in range(2*n):
 # print(tc)
 
 
-# In[51]:
-
-
 # Junk cell to test speed of controlledUa on 4n+ qubits
-qubits = cirq.LineQubit.range(4) # up to N=255
-qubits2 = cirq.LineQubit.range(4,9) # starts as |0> and is needed to implement modular multiplication
-ctrl = cirq.NamedQubit('ctrl') # Will always be on in this cell
-ancilla = cirq.NamedQubit('ancilla') # Needed for uncomputation in modular addition
-x = 1 # Input ket |x>
-a = 7 # a for Ua multiplication
-N = 15 # 
-n = ceil(log2(N))
-n = 4
-xbin = format(x, f'0{n}b')
-for i in range(n): # Set input ket |x>
-    if xbin[i] == '1':
-        cir.append(cirq.X(qubits[i]))
-# time1 = time.time()
-b = 0
-f = 12
-temp = controlledUa(a, N, n, qubits, qubits2, ancilla, ctrl)
-totes = 0
-for _ in range(f):
-    cir = cirq.Circuit()
+# qubits = cirq.LineQubit.range(4) # up to N=255
+# qubits2 = cirq.LineQubit.range(4,9) # starts as |0> and is needed to implement modular multiplication
+# ctrl = cirq.NamedQubit('ctrl') # Will always be on in this cell
+# ancilla = cirq.NamedQubit('ancilla') # Needed for uncomputation in modular addition
+# x = 1 # Input ket |x>
+# a = 7 # a for Ua multiplication
+# N = 15 # 
+# n = ceil(log2(N))
+# n = 4
+# xbin = format(x, f'0{n}b')
+# for i in range(n): # Set input ket |x>
+#     if xbin[i] == '1':
+#         cir.append(cirq.X(qubits[i]))
+# # time1 = time.time()
+# b = 0
+# f = 12
+# temp = controlledUa(a, N, n, qubits, qubits2, ancilla, ctrl)
+# totes = 0
+# for _ in range(f):
+#     cir = cirq.Circuit()
     
-    cir.append(cirq.X(ctrl)) # Set ctrl on so controlledUa does something
+#     cir.append(cirq.X(ctrl)) # Set ctrl on so controlledUa does something
     
-    for i in range(n): # Set target ket |b>
-        if format(b, f'0{n}b')[i] == '1':
-            cir.append(cirq.X(qubits2[i+1]))
+#     for i in range(n): # Set target ket |b>
+#         if format(b, f'0{n}b')[i] == '1':
+#             cir.append(cirq.X(qubits2[i+1]))
             
-    cir.append(temp)
-    print(f"Number of gates in arithmetic gate: {len(temp)}.")
-#     time2 = time.time()
-    cir.append(cirq.measure(*qubits, key = 'result'))
-    cir.append(cirq.measure(*qubits2, key = 'reg2'))
-    cir.append(cirq.measure(ctrl, key = 'ctrl'))
-    cir.append(cirq.measure(ancilla, key = 'ancilla'))
-    sim = cirq.Simulator()
-    time3 = time.time()
-    res = sim.simulate(cir)
-    time4 = time.time()
-    totes += time4-time3
-print(totes)
+#     cir.append(temp)
+#     print(f"Number of gates in arithmetic gate: {len(temp)}.")
+# #     time2 = time.time()
+#     cir.append(cirq.measure(*qubits, key = 'result'))
+#     cir.append(cirq.measure(*qubits2, key = 'reg2'))
+#     cir.append(cirq.measure(ctrl, key = 'ctrl'))
+#     cir.append(cirq.measure(ancilla, key = 'ancilla'))
+#     sim = cirq.Simulator()
+#     time3 = time.time()
+#     res = sim.simulate(cir)
+#     time4 = time.time()
+#     totes += time4-time3
+# print(totes)
 # print(f"Time to build circuit: {time2-time1}")
 # print(f"Time to run circuit: {time4-time3}")
 # print(f"Expect {format(x, f'0{n}b')} in the first register.")
@@ -317,9 +259,6 @@ print(totes)
 # print(f"Second register: {res.measurements['reg2'][0]}")
 # print(f"Ancilla sanity check should be 0: {res.measurements['ancilla'][0]}")
 # print(f"Ctrl sanity check should be 1: {res.measurements['ctrl'][0]}")
-
-
-# In[60]:
 
 
 def power_check(N):
@@ -332,9 +271,7 @@ def power_check(N):
     return False, 0, 0
 
 
-# In[64]:
-
-
+# Version of Shor's using adhoc implementation of classically conditioned gates in Cirq 0.13.1
 def Shor(N: int) -> int:
     # For an integer N, returns a non-trivial factor of N if N is composite, returns 0 if N is prime
     # 2 if N is even
@@ -403,15 +340,9 @@ def Shor(N: int) -> int:
                 return div1
             if N > div2 > 1:
                 return div2
-
-
-# In[68]:
-
-
+                
 # Shor(15) # Seems to work. Unsure of Fourier transform indexing
 
-
-# In[114]:
 
 
 # Version of Shor's using classically conditioned gates in Cirq v0.14.0.
@@ -481,10 +412,5 @@ def Shor2(N: int) -> int:
             if N > div2 > 1:
                 return div2
         
-
-
-# In[119]:
-
-
 # Shor2(15) # Seems to work faster. Also ports to QASM just fine. 
 
